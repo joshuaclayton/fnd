@@ -33,6 +33,13 @@ fnd "\.xlsx?$" -r
 
 ## Installation
 
+### Homebrew
+
+```sh
+brew tap joshuaclayton/formulae
+brew install fnd
+```
+
 ### Cargo
 
 ```sh
