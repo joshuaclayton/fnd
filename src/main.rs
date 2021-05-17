@@ -3,7 +3,7 @@
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 use ignore::{WalkBuilder, WalkState};
-use regex::Regex;
+use regex::{Regex, RegexBuilder};
 use std::path::Path;
 use structopt::StructOpt;
 
@@ -16,12 +16,16 @@ struct Flags {
 
     #[structopt(short, long)]
     regex: bool,
+
+    #[structopt(short = "i", long)]
+    case_insensitive: bool,
 }
 
 enum PathCheck<'a> {
     Allow,
     CheckRegex(Regex),
     CheckStr(&'a str),
+    CheckCaseInsensitiveStr(&'a str),
 }
 
 impl<'a> PathCheck<'a> {
@@ -29,6 +33,10 @@ impl<'a> PathCheck<'a> {
         match self {
             PathCheck::Allow => true,
             PathCheck::CheckStr(query) => path.to_string_lossy().contains(query),
+            PathCheck::CheckCaseInsensitiveStr(query) => path
+                .to_string_lossy()
+                .to_lowercase()
+                .contains(&query.to_lowercase()),
             PathCheck::CheckRegex(regex) => regex.is_match(&path.to_string_lossy()),
         }
     }
@@ -36,7 +44,11 @@ impl<'a> PathCheck<'a> {
     fn new(flags: &'a Flags) -> Self {
         if let Some(ref query) = flags.query {
             if flags.regex {
-                if let Some(re) = Regex::new(&query).ok() {
+                if let Some(re) = RegexBuilder::new(&query)
+                    .case_insensitive(flags.case_insensitive)
+                    .build()
+                    .ok()
+                {
                     PathCheck::CheckRegex(re)
                 } else {
                     PathCheck::CheckStr(&query)
@@ -45,7 +57,11 @@ impl<'a> PathCheck<'a> {
                 if query == "." {
                     PathCheck::Allow
                 } else {
-                    PathCheck::CheckStr(&query)
+                    if flags.case_insensitive {
+                        PathCheck::CheckCaseInsensitiveStr(&query)
+                    } else {
+                        PathCheck::CheckStr(&query)
+                    }
                 }
             }
         } else {
