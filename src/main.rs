@@ -17,6 +17,9 @@ struct Flags {
     #[structopt(short, long)]
     regex: bool,
 
+    #[structopt(short, long)]
+    hidden: bool,
+
     #[structopt(short = "i", long)]
     case_insensitive: bool,
 }
@@ -76,6 +79,11 @@ fn main() {
 
     if flags.all {
         builder.git_ignore(false);
+        builder.hidden(false);
+    }
+
+    if flags.hidden {
+        builder.hidden(false);
     }
 
     let check = PathCheck::new(&flags);
