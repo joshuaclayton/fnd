@@ -8,6 +8,11 @@ use std::path::Path;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
+#[structopt(
+    name = "fnd",
+    about = "A tiny command line tool to find file paths based on substring matching or regular expressions",
+    setting = structopt::clap::AppSettings::ColoredHelp
+)]
 struct Flags {
     query: Option<String>,
 
