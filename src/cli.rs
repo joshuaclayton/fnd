@@ -35,5 +35,7 @@ fn build_walk_parallel(flags: &Flags) -> WalkParallel {
         builder.hidden(false);
     }
 
+    builder.max_depth(flags.depth);
+
     builder.threads(20).build_parallel()
 }

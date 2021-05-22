@@ -44,6 +44,15 @@ fn test_all() {
     assert!(run_fnd(vec!["-a"]).contains("./target/debug"));
 }
 
+#[test]
+fn test_max_depth() {
+    assert!(run_fnd(vec![".rs", "-d", "3"]).contains("./src/cli.rs"));
+    assert!(run_fnd(vec![".rs", "-d", "2"]).contains("./src/cli.rs"));
+    assert!(run_fnd(vec!["README.md", "-d", "1"]).contains("./README.md"));
+
+    assert!(!run_fnd(vec![".rs", "-d", "1"]).contains("./src/cli.rs"));
+}
+
 fn run_fnd(args: Vec<&str>) -> String {
     let mut cmd = Command::cargo_bin("fnd").expect("fnd should exist");
     for arg in args {

@@ -20,4 +20,8 @@ pub struct Flags {
 
     #[structopt(short = "i", long)]
     pub case_insensitive: bool,
+
+    #[structopt(short, long)]
+    /// The maximum directory depth when looking for matches
+    pub depth: Option<usize>,
 }
