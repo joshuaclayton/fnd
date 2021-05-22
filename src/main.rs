@@ -2,6 +2,7 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
+use anyhow::{Context, Result};
 use ignore::{WalkBuilder, WalkState};
 use regex::{Regex, RegexBuilder};
 use std::path::Path;
@@ -49,37 +50,34 @@ impl<'a> PathCheck<'a> {
         }
     }
 
-    fn new(flags: &'a Flags) -> Self {
+    fn new(flags: &'a Flags) -> Result<Self, regex::Error> {
         if let Some(ref query) = flags.query {
             if flags.regex {
-                if let Some(re) = RegexBuilder::new(&query)
+                RegexBuilder::new(&query)
                     .case_insensitive(flags.case_insensitive)
                     .build()
-                    .ok()
-                {
-                    PathCheck::CheckRegex(re)
-                } else {
-                    PathCheck::CheckStr(&query)
-                }
+                    .map(|v| PathCheck::CheckRegex(v))
             } else {
                 if query == "." {
-                    PathCheck::Allow
+                    Ok(PathCheck::Allow)
                 } else {
                     if flags.case_insensitive {
-                        PathCheck::CheckCaseInsensitiveStr(&query)
+                        Ok(PathCheck::CheckCaseInsensitiveStr(&query))
                     } else {
-                        PathCheck::CheckStr(&query)
+                        Ok(PathCheck::CheckStr(&query))
                     }
                 }
             }
         } else {
-            PathCheck::Allow
+            Ok(PathCheck::Allow)
         }
     }
 }
 
-fn main() {
+fn main() -> Result<()> {
     let flags = Flags::from_args();
+    let check = PathCheck::new(&flags).context("Unable to build path check")?;
+
     let mut builder = WalkBuilder::new("./");
 
     if flags.all {
@@ -90,8 +88,6 @@ fn main() {
     if flags.hidden {
         builder.hidden(false);
     }
-
-    let check = PathCheck::new(&flags);
 
     builder.threads(20).build_parallel().run(|| {
         Box::new(|result| {
@@ -104,4 +100,6 @@ fn main() {
             WalkState::Continue
         })
     });
+
+    Ok(())
 }
