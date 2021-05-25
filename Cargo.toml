@@ -13,6 +13,7 @@ ignore = "0.4"
 mimalloc = { version = "*", default-features = false }
 regex = "1"
 anyhow = "1"
+nom = "6"
 
 [dev-dependencies]
 assert_cmd = "0.10"

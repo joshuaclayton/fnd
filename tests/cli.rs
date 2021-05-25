@@ -53,6 +53,13 @@ fn test_max_depth() {
     assert!(!run_fnd(vec![".rs", "-d", "1"]).contains("./src/cli.rs"));
 }
 
+#[test]
+fn test_size_filtering() {
+    assert!(run_fnd(vec!["-s", "+1M"]).is_empty());
+    assert!(run_fnd(vec!["-s", "-1M"]).contains("./src/cli.rs"));
+    assert!(run_fnd(vec!["-s", "+12k"]).contains("./Cargo.lock"));
+}
+
 fn run_fnd(args: Vec<&str>) -> String {
     let mut cmd = Command::cargo_bin("fnd").expect("fnd should exist");
     for arg in args {

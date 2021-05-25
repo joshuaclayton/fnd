@@ -1,6 +1,24 @@
 use crate::Flags;
 use regex::{Regex, RegexBuilder};
-use std::path::Path;
+use std::{fs::Metadata, path::Path};
+
+pub struct Check<'a> {
+    check: PathCheck<'a>,
+    flags: &'a Flags,
+}
+
+impl<'a> Check<'a> {
+    pub fn check(&self, path: &Path, metadata: Option<Metadata>) -> bool {
+        match (&self.flags.size, metadata) {
+            (Some(size), Some(meta)) => self.check.check(path) && size.check(meta.len()),
+            _ => self.check.check(path),
+        }
+    }
+
+    pub fn new(flags: &'a Flags) -> Result<Self, regex::Error> {
+        PathCheck::new(flags).map(|pc| Check { check: pc, flags })
+    }
+}
 
 pub enum PathCheck<'a> {
     Allow,

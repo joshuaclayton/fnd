@@ -1,4 +1,4 @@
-use crate::{Flags, PathCheck};
+use crate::{Check, Flags};
 use anyhow::Context;
 pub use anyhow::Result;
 use ignore::{WalkBuilder, WalkParallel, WalkState};
@@ -6,12 +6,13 @@ use structopt::StructOpt;
 
 pub fn run() -> Result<()> {
     let flags = Flags::from_args();
-    let check = PathCheck::new(&flags).context("Unable to build path check")?;
+    let check = Check::new(&flags).context("Unable to build path check")?;
 
     build_walk_parallel(&flags).run(|| {
         Box::new(|result| {
-            if let Some(path) = result.ok().map(|entry| entry.path().to_path_buf()) {
-                if check.check(&path) {
+            if let Some(entry) = result.ok() {
+                let path = entry.path();
+                if check.check(&path.to_path_buf(), path.metadata().ok()) {
                     println!("{}", path.to_string_lossy());
                 }
             }
